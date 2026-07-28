@@ -1,6 +1,8 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect, useRef } from "react";
+
+const WEAK_TOPICS_KEY = "studyquiz_weak_topics";
 
 export default function QuizPage() {
   const [topic, setTopic] = useState("");
@@ -10,6 +12,24 @@ export default function QuizPage() {
   const [submitted, setSubmitted] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
+  const contextRef = useRef(null);
+  const [fromFlashcards, setFromFlashcards] = useState(false);
+
+  useEffect(() => {
+    try {
+      const stored = localStorage.getItem("studyquiz_flashcards_to_quiz");
+      if (stored) {
+        const parsed = JSON.parse(stored);
+        contextRef.current = parsed.context;
+        setTopic(parsed.topic);
+        setFromFlashcards(true);
+        localStorage.removeItem("studyquiz_flashcards_to_quiz");
+      }
+    } catch (e) {
+      // ignore
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   async function handleGenerate() {
     if (!topic.trim()) return;
@@ -22,16 +42,52 @@ export default function QuizPage() {
       const res = await fetch("/api/quiz", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ topic, numQuestions }),
+        body: JSON.stringify({
+          topic,
+          numQuestions,
+          context: contextRef.current || undefined,
+        }),
       });
       const data = await res.json();
       if (!res.ok) throw new Error(data.error || "Failed to generate quiz");
       setQuestions(data.questions || []);
+      contextRef.current = null;
+      setFromFlashcards(false);
     } catch (e) {
       setError(e.message);
     } finally {
       setLoading(false);
     }
+  }
+
+  function recordWeakTopics() {
+    if (!questions) return;
+    const wrong = questions.filter((q, i) => answers[i] !== q.correctIndex);
+    if (wrong.length === 0) return;
+
+    let existing = [];
+    try {
+      const saved = localStorage.getItem(WEAK_TOPICS_KEY);
+      if (saved) existing = JSON.parse(saved);
+    } catch (e) {
+      existing = [];
+    }
+
+    const entry = {
+      id: Date.now(),
+      topic,
+      date: new Date().toISOString().split("T")[0],
+      wrongQuestions: wrong.map((q) => q.question),
+      total: questions.length,
+      wrongCount: wrong.length,
+    };
+
+    localStorage.setItem(WEAK_TOPICS_KEY, JSON.stringify([entry, ...existing]));
+  }
+
+  function handleSubmit() {
+    setSubmitted(true);
+    recordWeakTopics();
   }
 
   function selectAnswer(qIndex, optIndex) {
@@ -48,7 +104,12 @@ export default function QuizPage() {
 
   return (
     <div>
-      <h1 className="text-2xl font-bold text-slate-900 mb-6">Quiz Generator</h1>
+      <h1 className="text-2xl font-bold text-slate-900 mb-2">Quiz Generator</h1>
+      {fromFlashcards && (
+        <p className="text-sm text-brand-600 mb-4">
+          ✓ Loaded from your flashcards — click Generate to build a quiz from them.
+        </p>
+      )}
 
       <div className="card mb-8 flex flex-col sm:flex-row gap-3">
         <input
@@ -111,7 +172,7 @@ export default function QuizPage() {
 
           {!submitted ? (
             <button
-              onClick={() => setSubmitted(true)}
+              onClick={handleSubmit}
               className="btn-primary w-full"
               disabled={Object.keys(answers).length < questions.length}
             >
@@ -122,6 +183,15 @@ export default function QuizPage() {
               <p className="text-lg font-semibold text-slate-800">
                 You scored {score} / {questions.length}
               </p>
+              {score < questions.length && (
+                <p className="text-sm text-slate-500 mt-1">
+                  Missed questions saved to your{" "}
+                  <a href="/weak-topics" className="text-brand-600 hover:underline">
+                    Weak Topics tracker
+                  </a>
+                  .
+                </p>
+              )}
               <button
                 onClick={handleGenerate}
                 className="btn-secondary mt-3"

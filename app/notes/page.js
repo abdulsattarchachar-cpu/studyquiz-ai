@@ -2,8 +2,12 @@
 
 import { useState } from "react";
 
+const LANGUAGES = ["Same as input", "English", "Urdu", "Roman Urdu", "Spanish", "French", "Arabic"];
+
 export default function NotesPage() {
   const [notes, setNotes] = useState("");
+  const [mode, setMode] = useState("summary");
+  const [language, setLanguage] = useState("Same as input");
   const [summary, setSummary] = useState("");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
@@ -17,7 +21,7 @@ export default function NotesPage() {
       const res = await fetch("/api/summarize", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ notes }),
+        body: JSON.stringify({ notes, mode, language }),
       });
       const data = await res.json();
       if (!res.ok) throw new Error(data.error || "Failed to summarize");
@@ -35,6 +39,24 @@ export default function NotesPage() {
 
       <div className="grid md:grid-cols-2 gap-6">
         <div className="card">
+          <div className="flex gap-3 flex-col sm:flex-row mb-3">
+            <div className="flex-1">
+              <label className="block text-sm font-medium text-slate-600 mb-1">Mode</label>
+              <select value={mode} onChange={(e) => setMode(e.target.value)} className="input">
+                <option value="summary">Standard Summary</option>
+                <option value="eli5">Explain Like I'm 5 (ELI5)</option>
+              </select>
+            </div>
+            <div className="flex-1">
+              <label className="block text-sm font-medium text-slate-600 mb-1">Output Language</label>
+              <select value={language} onChange={(e) => setLanguage(e.target.value)} className="input">
+                {LANGUAGES.map((l) => (
+                  <option key={l} value={l}>{l}</option>
+                ))}
+              </select>
+            </div>
+          </div>
+
           <label className="block text-sm font-medium text-slate-600 mb-2">
             Paste your notes or lecture text
           </label>
