@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { motion, AnimatePresence } from "framer-motion";
 import { Route, ChevronDown, Plus, Brain, Sparkles } from "lucide-react";
 import { useToast } from "../../components/ToastProvider";
+import { logActivity, recordActivity } from "../../lib/stats";
 
 const TASKS_KEY = "studyquiz_tasks";
 
@@ -36,6 +37,8 @@ export default function RoadmapPage() {
       if (!res.ok) throw new Error(data.error || "Failed to generate roadmap");
       setRoadmap(data);
       setOpenWeek(0);
+      recordActivity();
+      logActivity("roadmap", `Generated a ${totalDays}-day roadmap for "${goal}"`);
     } catch (e) {
       setError(e.message);
     } finally {
@@ -83,10 +86,14 @@ export default function RoadmapPage() {
 
   return (
     <div>
-      <div className="flex items-center gap-2 mb-6">
+      <div className="flex items-center gap-2 mb-1">
         <Route className="text-brand-600" size={22} />
         <h1 className="text-[26px] font-semibold text-ink-900">AI Roadmap Generator</h1>
       </div>
+      <p className="text-xs text-slate-400 mb-6">
+        Resource links open a live YouTube/Google search for that topic — not a single hardcoded video,
+        so you always get current, working results.
+      </p>
 
       <div className="card mb-6 space-y-3">
         <div>
@@ -186,9 +193,29 @@ export default function RoadmapPage() {
                                 {d.tasks.map((t, ti) => <li key={ti}>{t}</li>)}
                               </ul>
                               {d.resources?.length > 0 && (
-                                <p className="text-xs text-slate-400 mt-1">
-                                  Resources: {d.resources.join(", ")}
-                                </p>
+                                <div className="flex flex-wrap gap-1.5 mt-2">
+                                  {d.resources.map((r, ri) => (
+                                    <div key={ri} className="flex items-center gap-1">
+                                      <span className="text-xs text-slate-400">{r}:</span>
+                                      <a
+                                        href={`https://www.youtube.com/results?search_query=${encodeURIComponent(r + " " + goal)}`}
+                                        target="_blank"
+                                        rel="noopener noreferrer"
+                                        className="badge bg-red-50 text-danger hover:bg-red-100 transition-colors text-xs"
+                                      >
+                                        YouTube
+                                      </a>
+                                      <a
+                                        href={`https://www.google.com/search?q=${encodeURIComponent(r + " " + goal)}`}
+                                        target="_blank"
+                                        rel="noopener noreferrer"
+                                        className="badge bg-slate-100 text-ink-600 hover:bg-slate-200 transition-colors text-xs"
+                                      >
+                                        Google
+                                      </a>
+                                    </div>
+                                  ))}
+                                </div>
                               )}
                             </div>
                           ))}

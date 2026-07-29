@@ -5,6 +5,7 @@ import Link from "next/link";
 import { motion, AnimatePresence } from "framer-motion";
 import { CalendarRange, Sparkles, CheckCircle2 } from "lucide-react";
 import { useToast } from "../../components/ToastProvider";
+import { logActivity, recordActivity } from "../../lib/stats";
 
 const TASKS_KEY = "studyquiz_tasks";
 const DIFFICULTIES = ["Easy", "Medium", "Hard"];
@@ -44,6 +45,8 @@ export default function StudyPlanPage() {
       const data = await res.json();
       if (!res.ok) throw new Error(data.error || "Failed to generate study plan");
       setPlan(data.plan || []);
+      recordActivity();
+      logActivity("study-plan", `Generated a ${days}-day study plan for "${subjects}"`);
     } catch (e) {
       setError(e.message);
     } finally {

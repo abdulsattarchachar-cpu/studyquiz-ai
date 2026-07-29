@@ -4,7 +4,7 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { motion, AnimatePresence } from "framer-motion";
 import { Layers, Shuffle, ArrowRightCircle } from "lucide-react";
-import { incrementFlashcardCount } from "../../lib/stats";
+import { incrementFlashcardCount, logActivity } from "../../lib/stats";
 
 const DIFFICULTIES = ["Easy", "Medium", "Hard"];
 
@@ -34,6 +34,7 @@ export default function FlashcardsPage() {
       if (!res.ok) throw new Error(data.error || "Failed to generate flashcards");
       setCards(data.cards || []);
       incrementFlashcardCount((data.cards || []).length);
+      logActivity("flashcards", `Generated ${(data.cards || []).length} flashcards on "${topic}"`);
     } catch (e) {
       setError(e.message);
     } finally {

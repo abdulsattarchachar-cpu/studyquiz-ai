@@ -1,6 +1,7 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect, Suspense } from "react";
+import { useSearchParams } from "next/navigation";
 import { motion, AnimatePresence } from "framer-motion";
 import {
   GraduationCap,
@@ -18,6 +19,7 @@ import {
   Award,
 } from "lucide-react";
 import Confetti from "../../components/Confetti";
+import { setContinueLearning, clearContinueLearning, logActivity, recordActivity } from "../../lib/stats";
 
 const STAGES = [
   { id: "introduction", label: "Introduction", icon: BookOpen, type: "content" },
@@ -33,9 +35,16 @@ const STAGES = [
   { id: "finalAssessment", label: "Final Assessment", icon: Award, type: "content" },
 ];
 
-export default function LearnPage() {
+function LearnPageInner() {
+  const searchParams = useSearchParams();
   const [topic, setTopic] = useState("");
   const [started, setStarted] = useState(false);
+
+  useEffect(() => {
+    const resumeTopic = searchParams.get("topic");
+    if (resumeTopic) setTopic(resumeTopic);
+  }, [searchParams]);
+
   const [stageIndex, setStageIndex] = useState(0);
   const [transcript, setTranscript] = useState([]);
   const [stageContent, setStageContent] = useState({});
@@ -89,6 +98,9 @@ export default function LearnPage() {
     setStageIndex(0);
     setTranscript([]);
     setStageContent({});
+    recordActivity();
+    logActivity("learn", `Started an AI Teacher lesson on "${topic}"`);
+    setContinueLearning({ topic, stageIndex: 0, stageLabel: STAGES[0].label, totalStages: STAGES.length });
     await fetchStage(0);
   }
 
@@ -102,6 +114,7 @@ export default function LearnPage() {
     if (nextIndex >= STAGES.length) {
       setShowConfetti(true);
       setTimeout(() => setShowConfetti(false), 2500);
+      clearContinueLearning();
       return;
     }
 
@@ -110,6 +123,12 @@ export default function LearnPage() {
     setPracticeFeedback(null);
     setQuizSubmitted(false);
     setQuizAnswers({});
+    setContinueLearning({
+      topic,
+      stageIndex: nextIndex,
+      stageLabel: STAGES[nextIndex].label,
+      totalStages: STAGES.length,
+    });
 
     const nextStage = STAGES[nextIndex];
     if (nextStage.type === "content" && !stageContent[nextStage.id]) {
@@ -153,6 +172,12 @@ export default function LearnPage() {
     ]);
     const nextIndex = stageIndex + 1;
     setStageIndex(nextIndex);
+    setContinueLearning({
+      topic,
+      stageIndex: nextIndex,
+      stageLabel: STAGES[nextIndex]?.label || "Complete",
+      totalStages: STAGES.length,
+    });
     await fetchStage(nextIndex, { wrongQuestions });
   }
 
@@ -333,5 +358,13 @@ export default function LearnPage() {
         </motion.div>
       </AnimatePresence>
     </div>
+  );
+}
+
+export default function LearnPage() {
+  return (
+    <Suspense fallback={<div className="text-slate-400 text-sm">Loading...</div>}>
+      <LearnPageInner />
+    </Suspense>
   );
 }

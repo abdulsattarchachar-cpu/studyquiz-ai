@@ -3,6 +3,7 @@
 import { useState, useRef, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { MessageCircle, Send, Copy, Check, RotateCcw } from "lucide-react";
+import { incrementAIQuestionsAsked, logActivity } from "../../lib/stats";
 
 const SUGGESTIONS = [
   "Explain recursion with a simple example",
@@ -57,6 +58,8 @@ export default function ChatPage() {
       const data = await res.json();
       if (!res.ok) throw new Error(data.error || "Failed to get a response");
       setMessages([...newMessages, { role: "assistant", content: data.reply, time: Date.now() }]);
+      incrementAIQuestionsAsked();
+      logActivity("chat", `Asked the Doubt Solver: "${text.slice(0, 60)}${text.length > 60 ? "…" : ""}"`);
     } catch (e2) {
       setError(e2.message);
     } finally {
