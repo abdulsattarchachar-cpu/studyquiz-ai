@@ -3,7 +3,7 @@ import { callGroq, jsonSafeParse } from "../../../lib/groq";
 
 export async function POST(req) {
   try {
-    const { topic, count } = await req.json();
+    const { topic, count, difficulty } = await req.json();
 
     if (!topic || !topic.trim()) {
       return NextResponse.json({ error: "Please provide a topic or notes." }, { status: 400 });
@@ -20,7 +20,7 @@ export async function POST(req) {
         },
         {
           role: "user",
-          content: `Create ${num} study flashcards about: ${topic}`,
+          content: `Create ${num} study flashcards about: ${topic}. Difficulty level: ${difficulty || "Medium"}.`,
         },
       ],
       { temperature: 0.5, max_tokens: 2000 }

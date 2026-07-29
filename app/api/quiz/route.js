@@ -3,7 +3,7 @@ import { callGroq } from "../../../lib/groq";
 
 export async function POST(req) {
   try {
-    const { topic, numQuestions, context } = await req.json();
+    const { topic, numQuestions, context, difficulty } = await req.json();
 
     if (!topic || !topic.trim()) {
       return NextResponse.json({ error: "Please provide a topic." }, { status: 400 });
@@ -12,8 +12,8 @@ export async function POST(req) {
     const count = Math.min(Math.max(parseInt(numQuestions) || 5, 1), 15);
 
     const userContent = context
-      ? `Base the questions strictly on this study material about "${topic}":\n\n${context}\n\nGenerate ${count} multiple-choice questions from it.`
-      : `Generate ${count} multiple-choice quiz questions about: ${topic}`;
+      ? `Base the questions strictly on this study material about "${topic}":\n\n${context}\n\nGenerate ${count} multiple-choice questions from it. Difficulty: ${difficulty || "Medium"}.`
+      : `Generate ${count} multiple-choice quiz questions about: ${topic}. Difficulty: ${difficulty || "Medium"}.`;
 
     const raw = await callGroq(
       [
