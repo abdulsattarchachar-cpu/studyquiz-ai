@@ -12,6 +12,8 @@ Ye app **dono** Groq (cloud, free) aur **Ollama (local, fully offline)** ke saat
 
 ## Core Features
 
+4. **Revision Tracker (Spaced Repetition)** — add a topic the day you study it, and it automatically schedules a Day-3 recall, then a Day-7 recall, then marks it Mastered. No manual date math — the Dashboard shows what's due today.
+
 4. **Study Planner** — priority/category ke saath tasks, localStorage mein save
 5. **Study Plan Generator** — subjects + deadline se day-wise plan, seedha Planner mein add
 6. **AI Notes Summarizer** — Standard/ELI5 mode + output language translation + copy/download

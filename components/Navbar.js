@@ -17,6 +17,7 @@ import {
   Calculator,
   Route,
   GraduationCap,
+  CalendarClock,
   Menu,
   X,
 } from "lucide-react";
@@ -30,6 +31,7 @@ const links = [
   { href: "/flashcards", label: "Flashcards", icon: Layers },
   { href: "/quiz", label: "Quiz", icon: Brain },
   { href: "/weak-topics", label: "Weak Topics", icon: Target },
+  { href: "/revision", label: "Revision", icon: CalendarClock },
   { href: "/math-tutor", label: "Math Tutor", icon: Calculator },
   { href: "/learn", label: "AI Teacher", icon: GraduationCap },
   { href: "/essay-grader", label: "Essay Grader", icon: PenSquare },

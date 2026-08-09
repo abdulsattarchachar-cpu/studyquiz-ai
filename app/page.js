@@ -26,6 +26,7 @@ import {
   Zap,
   Clock,
   BookOpen,
+  CalendarClock,
   Layers as LayersIcon,
 } from "lucide-react";
 import {
@@ -60,6 +61,7 @@ import {
   getAchievements,
   getAIQuestionsAsked,
 } from "../lib/stats";
+import { getDueToday as getRevisionDueToday } from "../lib/revision";
 
 const TASKS_KEY = "studyquiz_tasks";
 const WEAK_TOPICS_KEY = "studyquiz_weak_topics";
@@ -77,6 +79,7 @@ const coreFeatures = [
   { href: "/flashcards", icon: Layers, title: "Flashcard Generator", description: "Turn any topic into flip-to-reveal flashcards, then convert them into a quiz." },
   { href: "/quiz", icon: Brain, title: "Quiz Generator", description: "Type any topic and instantly generate multiple-choice quiz questions." },
   { href: "/weak-topics", icon: Target, title: "Weak Topics Tracker", description: "Missed questions are saved automatically — generate targeted practice." },
+  { href: "/revision", icon: CalendarClock, title: "Revision Tracker", description: "Add a topic when you study it — get automatic Day-3 and Day-7 recall reminders." },
   { href: "/essay-grader", icon: PenSquare, title: "Essay / Assignment Grader", description: "Get a score with strengths, improvements, and grammar notes." },
   { href: "/chat", icon: MessageCircle, title: "Doubt Solver", description: "Ask any study question and get a clear, patient explanation." },
 ];
@@ -108,6 +111,7 @@ export default function Dashboard() {
   const [accuracyTrend, setAccuracyTrend] = useState([]);
   const [subjectProgress, setSubjectProgress] = useState([]);
   const [todayTasks, setTodayTasks] = useState([]);
+  const [revisionDue, setRevisionDue] = useState([]);
   const [continueLearning, setContinueLearningState] = useState(null);
   const [weakTopics, setWeakTopics] = useState([]);
   const [upcomingExams, setUpcomingExams] = useState([]);
@@ -132,6 +136,7 @@ export default function Dashboard() {
     setAccuracyTrend(getQuizAccuracyTrend());
     setSubjectProgress(getSubjectProgress());
     setTodayTasks(getTodayTasks());
+    setRevisionDue(getRevisionDueToday());
     setContinueLearningState(getContinueLearning());
     setUpcomingExams(getUpcomingExams());
     setRecentActivity(getRecentActivity());
@@ -269,7 +274,7 @@ export default function Dashboard() {
         <StatCard icon={MessageCircle} label="AI Questions Asked" value={stats?.aiQuestions ?? 0} progress={stats ? Math.min(100, (stats.aiQuestions / 20) * 100) : 0} loading={!stats} />
       </div>
 
-      <div className="grid lg:grid-cols-3 gap-5 mb-8">
+      <div className="grid lg:grid-cols-4 gap-5 mb-8">
         {/* Today's Plan */}
         <div className="card lg:col-span-1">
           <div className="flex items-center gap-2 mb-4">
@@ -306,6 +311,34 @@ export default function Dashboard() {
                   );
                 });
               })()}
+            </div>
+          )}
+        </div>
+
+        {/* Due for Revision Today (Day-3 / Day-7 spaced repetition) */}
+        <div className="card lg:col-span-1">
+          <div className="flex items-center justify-between mb-4">
+            <div className="flex items-center gap-2">
+              <CalendarClock className="text-brand-600" size={17} />
+              <h2 className="font-semibold text-ink-900 text-sm">Due for Revision</h2>
+            </div>
+            {revisionDue.length > 0 && <span className="badge bg-red-50 text-danger">{revisionDue.length}</span>}
+          </div>
+          {revisionDue.length === 0 ? (
+            <p className="text-slate-400 text-sm">
+              Nothing due. <Link href="/revision" className="text-brand-600 hover:underline">Track a topic →</Link>
+            </p>
+          ) : (
+            <div className="space-y-2">
+              {revisionDue.slice(0, 4).map((t) => (
+                <div key={t.id} className="text-sm">
+                  <p className="text-ink-900 truncate">{t.topic}</p>
+                  <p className="text-xs text-slate-400">{t.subject}</p>
+                </div>
+              ))}
+              <Link href="/revision" className="btn-primary !py-1.5 text-xs mt-1">
+                Review Now <ArrowRight size={13} />
+              </Link>
             </div>
           )}
         </div>
