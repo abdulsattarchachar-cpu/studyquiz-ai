@@ -1,32 +1,39 @@
 # StudyQuiz AI
 
-An AI-powered study companion built with Next.js. It includes study planning, quizzes, flashcards, summaries, essay grading, a chat doubt solver, a structured learning mode, visual notes, and an AI math tutor with image input.
+StudyQuiz AI is a Next.js learning assistant for quizzes, flashcards, study planning, notes, chat, summaries, essay grading, and math tutoring.
+
+## AI provider
+
+This project uses **Google Gemini only**. Groq, OpenAI, and local AI/Ollama integrations have been removed. All AI requests are sent through server-side API routes to Gemini; the API key is never exposed to browser code.
+
+### Environment variables
+
+Create `.env.local` for local development:
+
+```env
+GEMINI_API_KEY=your_gemini_api_key_here
+GEMINI_MODEL=gemini-2.5-flash
+```
+
+For Vercel, add the same variables in **Project → Settings → Environment Variables** for Production (and Preview/Development if needed), then redeploy.
+
+Get or manage a Gemini API key at https://aistudio.google.com/apikey.
 
 ## Run locally
 
-1. Install Node.js (LTS).
-2. Install dependencies:
-   ```bash
-   npm install
-   ```
-3. Copy `.env.example` to `.env.local` (Windows PowerShell: `Copy-Item .env.example .env.local`).
-4. Add your own API key to `.env.local`:
-   ```env
-   AI_PROVIDER=gemini
-   GEMINI_API_KEY=your_new_gemini_api_key
-   GEMINI_MODEL=gemini-2.5-flash
-   ```
-   Create a Gemini key at https://aistudio.google.com/apikey.
-5. Start the development server:
-   ```bash
-   npm run dev
-   ```
-6. Open http://localhost:3000.
+```bash
+npm install
+npm run dev
+```
 
-## AI providers
+Open http://localhost:3000.
 
-Set `AI_PROVIDER` to `gemini` (default), `groq`, `ollama`, or `openai`. Gemini supports both text generation and the Math Tutor's image-question mode. API keys must remain server-side in `.env.local`; never prefix them with `NEXT_PUBLIC_` or commit them to Git.
+## Deploy
 
-## Deploying
+Connect the GitHub repository to Vercel. Every push to the configured production branch can trigger a deployment. Ensure `GEMINI_API_KEY` and `GEMINI_MODEL` are configured in Vercel before deploying.
 
-Add `AI_PROVIDER`, `GEMINI_API_KEY`, and (optionally) `GEMINI_MODEL` as environment variables in your hosting provider's project settings. Do not upload `.env.local` or paste API keys into client-side code.
+## Security
+
+- Never commit `.env.local`.
+- Never prefix `GEMINI_API_KEY` with `NEXT_PUBLIC_`.
+- If an API key was exposed in a chat, repository, screenshot, or public deployment, revoke it and create a new one.
